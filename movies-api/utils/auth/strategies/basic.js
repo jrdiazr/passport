@@ -5,23 +5,31 @@ const bcrypt = require('bcrypt');
 
 const UsersService = require('../../../services/users');
 
-passport.user(
-  new BasicStrategy(async function(email, password, cb) {
-    const usersService = new UsersService();
+// para implementar la estrategia hacemos uso de Passport.use
+passport.use(
+  new BasicStrategy(async (email, password, cb) => {
+    const userService = new UsersService();
+
+    // vamos a verificar si el usurio existe o no
     try {
-      const user = await usersService.getUser({ email });
+      const user = await userService.getUser({ email });
+
       if (!user) {
         return cb(boom.unauthorized(), false);
       }
+
       if (!(await bcrypt.compare(password, user.password))) {
         return cb(boom.unauthorized(), false);
       }
 
+      // antes de la validación, eliminamos el password del objeto user
+      // así nos aseguramos que ahí en adelante en el uso de la aplicación no sea visible
+      // el password del usuario
       delete user.password;
 
       return cb(null, user);
     } catch (err) {
-      cb(err);
+      return cb(err);
     }
   })
 );
