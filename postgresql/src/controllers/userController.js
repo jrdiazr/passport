@@ -1,31 +1,31 @@
-const pool = require("../utils/dbConect");
+const pool = require('../utils/dbConect');
 
 const getUsers = async (req, res) => {
-	const response = await pool.query("SELECT * FROM t_usuario");
+	const response = await pool.query('SELECT * FROM t_usuario');
 	res.status(200).json({
-		message: "Usuarios retornados con exito",
+		message: 'Usuarios retornados con exito',
 		body: {
-			user: [...response.rows]
-		}
+			user: [...response.rows],
+		},
 	});
 };
 
 const getUser = async (req, res) => {
 	const { id_usuario } = req.params;
 	const response = await pool.query(
-		"SELECT * FROM t_usuario WHERE id_usuario = $1",
+		'SELECT * FROM t_usuario WHERE id_usuario = $1',
 		[id_usuario]
 	);
 	res.status(200).json({
-		message: "Usuario retornado con exito",
+		message: 'Usuario retornado con exito',
 		body: {
-			user: { ...response.rows[0] }
-		}
+			user: { ...response.rows[0] },
+		},
 	});
 };
 
 const addUser = async (req, res) => {
-	const { usuario, password, nombre, mail, numero_contacto } = req.body;
+	const { password, nombre, apellido, email, numero_contacto } = req.body;
 	const response = await pool.query(
 		`INSERT INTO t_usuario 
     VALUES (
@@ -34,15 +34,32 @@ const addUser = async (req, res) => {
       $2,
       $3,
       $4,
-      $5      
+			$5,
+			true      
     ) RETURNING *`,
-		[usuario, password, nombre, apellido, mail]
+		[password, nombre, apellido, email, numero_contacto]
 	);
 	res.status(200).json({
-		message: "Usuario creado con exito",
+		message: 'Usuario creado con exito',
 		body: {
-			user: { ...response.rows[0] }
-		}
+			user: { ...response.rows[0] },
+		},
+	});
+};
+
+const loginUser = async (req, res) => {
+	const { password, email } = req.body;
+	const response = await pool.query(
+		`SELECT (count(*)>0) as login, id_usuario, nombre||' '||apellido as usuario FROM t_usuario WHERE lower(mail) = lower($1) AND password = $2 group by id_usuario, nombre||' '||apellido;`,
+		[email, password]
+	);
+	console.log(response.rows[0]);
+
+	res.status(200).json({
+		message: response.rows[0] ? 'Login exitoso' : 'Login no exitoso',
+		body: {
+			...(response.rows[0] ? response.rows[0] : { login: false }),
+		},
 	});
 };
 
@@ -61,22 +78,22 @@ const updateUser = async (req, res) => {
 		[id_usuario, nombre_usuario, password, nombre, apellido, mail]
 	);
 	res.status(200).json({
-		message: "Usuario actualizado con exito",
+		message: 'Usuario actualizado con exito',
 		body: {
-			user: { ...response.rows[0] }
-		}
+			user: { ...response.rows[0] },
+		},
 	});
 };
 
 const deleteUser = async (req, res) => {
 	const { id_usuario } = req.params;
 	const response = await pool.query(
-		"DELETE FROM t_usuario WHERE id_usuario = $1",
+		'DELETE FROM t_usuario WHERE id_usuario = $1',
 		[id_usuario]
 	);
 	res.status(200).json({
-		message: "Usuario eliminado con exito",
-		body: {}
+		message: 'Usuario eliminado con exito',
+		body: {},
 	});
 };
 
@@ -85,5 +102,6 @@ module.exports = {
 	getUser,
 	addUser,
 	updateUser,
-	deleteUser
+	deleteUser,
+	loginUser,
 };
