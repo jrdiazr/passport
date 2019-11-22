@@ -13,9 +13,12 @@ app.use(express.urlencoded({ extended: false }));
 const userRoutes = require('./routes/userRoutes');
 const driverRoutes = require('./routes/driverRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
+const travelRoutes = require('./routes/travelsRoutes');
+
 app.use(userRoutes);
 app.use(driverRoutes);
 app.use(vehicleRoutes);
+app.use(travelRoutes);
 
 app.listen(3000);
 console.log('Server on port 3000');
